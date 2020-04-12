@@ -47,10 +47,13 @@ const seed = async () => {
       },
     ];
 
+    await db.listings.deleteMany({});
+
     for (const listing of listings) {
       await db.listings.insertOne(listing);
     }
     console.log("seed success");
+    process.exit();
   } catch (error) {
     console.log(error);
   }
