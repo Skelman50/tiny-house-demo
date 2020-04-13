@@ -1,48 +1,49 @@
 import React from "react";
-import { useQuery, useMutation } from "../../lib/api";
+import { useQuery, useMutation } from "react-apollo";
+import { Listing as ListingsData } from "./__generated__/Listing";
 import {
-  ListingsData,
-  DeleteListingData,
+  DeleteListing as DeleteListingData,
   DeleteListingVariables,
-} from "./types";
+} from "./__generated__/DeleteListing";
+import { gql } from "apollo-boost";
 
 interface Props {
   title: string;
 }
 
-const LISTINGS = `
-    query Listing {
-        listings {
-          id
-          title
-          image
-          address
-          price
-          numOfGuests
-          numOfBeds
-          numOfBaths
-          rating
-        }
+const LISTINGS = gql`
+  query Listing {
+    listings {
+      id
+      title
+      image
+      address
+      price
+      numOfGuests
+      numOfBeds
+      numOfBaths
+      rating
     }
+  }
 `;
 
-const DELETE_LISTING = `
-    mutation DeleteListing($id: ID!) {
-      deleteListing(id: $id) {
-        id
-      }
+const DELETE_LISTING = gql`
+  mutation DeleteListing($id: ID!) {
+    deleteListing(id: $id) {
+      id
     }
+  }
 `;
 
 export const Listings = ({ title }: Props) => {
-  const { data, refetch, loading, error } = useQuery<ListingsData>(LISTINGS);
+  const { data, loading, error, refetch } = useQuery<ListingsData>(LISTINGS);
   const [
     deleteListings,
     { error: deleteListingError, loading: deleteListingLoading },
   ] = useMutation<DeleteListingData, DeleteListingVariables>(DELETE_LISTING);
 
   const HandleDeleteListing = async (id: string) => {
-    await deleteListings({ id });
+    await deleteListings({ variables: { id } });
     refetch();
   };
 
