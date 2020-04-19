@@ -13,7 +13,7 @@ interface Props {
   setViewer: (viewer: Viewer) => void;
 }
 
-export const AppHeader = ({ viewer, setViewer }: Props) => {
+export const AppHeader = React.forwardRef(({ viewer, setViewer }: Props, _) => {
   return (
     <Header className="app-header">
       <div className="app-header-skeleton__search-section">
@@ -28,4 +28,4 @@ export const AppHeader = ({ viewer, setViewer }: Props) => {
       </div>
     </Header>
   );
-};
+});

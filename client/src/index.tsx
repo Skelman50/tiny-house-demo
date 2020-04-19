@@ -1,7 +1,7 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { render } from "react-dom";
 import ApolloClient from "apollo-boost";
-import { ApolloProvider } from "react-apollo";
+import { ApolloProvider, useMutation } from "react-apollo";
 import { BrowserRouter as Router, Switch, Route } from "react-router-dom";
 import * as serviceWorker from "./serviceWorker";
 import {
@@ -16,11 +16,26 @@ import {
 } from "./section";
 
 import "./styles/index.css";
-import { Layout, Affix } from "antd";
+import { Layout, Affix, Spin } from "antd";
 import { Viewer } from "./lib/types";
+import {
+  LogIn,
+  LogInVariables,
+} from "./lib/graphql/mutations/LogIn/__generated__/LogIn";
+import { LOG_IN } from "./lib/graphql/mutations/LogIn";
+import { AppHeaderSkeleton } from "./lib/components/AppHeaderSkeleton";
+import { ErrorBanner } from "./lib/components";
 
 const client = new ApolloClient({
   uri: "/api",
+  request: async (operation) => {
+    const token = sessionStorage.getItem("token");
+    operation.setContext({
+      headers: {
+        "X-CSRF-TOKEN": token || "",
+      },
+    });
+  },
 });
 
 const initialViewer: Viewer = {
@@ -33,10 +48,44 @@ const initialViewer: Viewer = {
 
 const App = () => {
   const [viewer, setViewer] = useState<Viewer>(initialViewer);
-  console.log(viewer);
+  const [logIn, { error }] = useMutation<LogIn, LogInVariables>(LOG_IN, {
+    onCompleted: (data) => {
+      if (data && data.logIn) {
+        if (data.logIn.token) {
+          sessionStorage.setItem("token", data.logIn.token);
+        } else {
+          sessionStorage.removeItem("token");
+        }
+        setViewer(data.logIn);
+      }
+    },
+  });
+
+  const logInRef = useRef(logIn);
+
+  useEffect(() => {
+    logInRef.current();
+  }, []);
+
+  if (!viewer.didRequest && !error) {
+    return (
+      <Layout className="app-skeleton">
+        <AppHeaderSkeleton />
+        <div className="app-skeleton__spin-section">
+          <Spin size="large" tip="Launching Tiny House" />
+        </div>
+      </Layout>
+    );
+  }
+
+  const loginErrorBannerElement = error && (
+    <ErrorBanner description="Something went wrong. Try again later" />
+  );
+
   return (
     <Router>
       <Layout id="app">
+        {loginErrorBannerElement}
         <Affix offsetTop={0} className="app__affix-header">
           <AppHeader viewer={viewer} setViewer={setViewer} />
         </Affix>
