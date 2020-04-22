@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { useQuery } from "react-apollo";
 import { USER } from "../../lib/graphql/queries/User";
 import {
@@ -7,7 +7,7 @@ import {
 } from "../../lib/graphql/queries/User/__generated__/User";
 import { RouteComponentProps } from "react-router-dom";
 import { Layout, Row, Col } from "antd";
-import { UserProfile } from "./components";
+import { UserProfile, UserListings, UserBookings } from "./components";
 import { Viewer } from "../../lib/types";
 import { PageSkeleton, ErrorBanner } from "../../lib/components";
 
@@ -19,20 +19,52 @@ interface Props {
   viewer: Viewer;
 }
 
+const PAGE_LIMIT = 4;
+
 export const User = ({
   viewer,
   match,
 }: Props & RouteComponentProps<MatchParams>) => {
+  const [listingsPage, setListingsPage] = useState(1);
+  const [bookingsPage, setBookingsPage] = useState(1);
   const { data, error, loading } = useQuery<UserData, UserVariables>(USER, {
-    variables: { id: match.params.id },
+    variables: {
+      id: match.params.id,
+      bookingsPage,
+      listingsPage,
+      limit: PAGE_LIMIT,
+    },
   });
+
+  console.log(data);
 
   const user = data ? data.user : null;
 
   const viewerIsUser = viewer.id === match.params.id;
 
+  const userListings = user ? user.listings : null;
+  const userBookings = user ? user.bookings : null;
+
   const userProfileElement = user && (
     <UserProfile user={user} viewerIsUser={viewerIsUser} />
+  );
+
+  const userListingsElement = userListings && (
+    <UserListings
+      userListings={userListings}
+      setListingsPage={setListingsPage}
+      limit={PAGE_LIMIT}
+      listingsPage={listingsPage}
+    />
+  );
+
+  const userBookingsElement = (
+    <UserBookings
+      userBookings={userBookings}
+      setBookingsPage={setBookingsPage}
+      limit={PAGE_LIMIT}
+      bookingsPage={bookingsPage}
+    />
   );
 
   if (loading) {
@@ -54,6 +86,10 @@ export const User = ({
     <Layout.Content className="user">
       <Row gutter={12} typeof="flex" justify="space-between">
         <Col xs={24}>{userProfileElement}</Col>
+        <Col xs={24}>
+          {userListingsElement}
+          {userBookingsElement}
+        </Col>
       </Row>
     </Layout.Content>
   );

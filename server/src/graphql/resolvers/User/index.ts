@@ -7,7 +7,7 @@ import {
   UserListingsArgs,
   UserListingsData,
 } from "./types";
-import { Database, User } from "../../../lib/types";
+import { Database, User, Listing } from "../../../lib/types";
 import { authorize } from "../../../lib/utils";
 
 export const userResolvers: IResolvers = {
@@ -82,4 +82,7 @@ export const userResolvers: IResolvers = {
       }
     },
   },
+  // Listing: {
+  //   id: (listing: Listing) => listing._id,
+  // },
 };
