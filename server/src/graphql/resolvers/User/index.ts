@@ -82,7 +82,4 @@ export const userResolvers: IResolvers = {
       }
     },
   },
-  // Listing: {
-  //   id: (listing: Listing) => listing._id,
-  // },
 };
