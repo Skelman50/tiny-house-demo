@@ -8,7 +8,12 @@ import {
 } from "../../lib/graphql/queries/Listing/__generated__/Listing";
 import { Layout, Row, Col } from "antd";
 import { PageSkeleton, ErrorBanner } from "../../lib/components";
-import { ListingDetails, ListingBookings } from "./components";
+import {
+  ListingDetails,
+  ListingBookings,
+  ListingCreateBooking,
+} from "./components";
+import { Moment } from "moment";
 
 interface MatchParamsProps {
   id: string;
@@ -18,6 +23,8 @@ const PAGE_LIMIT = 3;
 
 export const Listing = ({ match }: RouteComponentProps<MatchParamsProps>) => {
   const [bookingsPage, setBookingsPage] = useState(1);
+  const [checkInDate, setCheckInDate] = useState<Moment | null>(null);
+  const [checkOutDate, setCheckOutDate] = useState<Moment | null>(null);
   const { data, error, loading } = useQuery<ListingData, ListingVariables>(
     LISTING,
     {
@@ -60,12 +67,26 @@ export const Listing = ({ match }: RouteComponentProps<MatchParamsProps>) => {
       limit={PAGE_LIMIT}
     />
   );
+
+  const listingCreateBookingElement = listing ? (
+    <ListingCreateBooking
+      price={listing.price}
+      setCheckInDate={setCheckInDate}
+      setCheckOutDate={setCheckOutDate}
+      checkInDate={checkInDate}
+      checkOutDate={checkOutDate}
+    />
+  ) : null;
+
   return (
     <Layout.Content className="listings">
       <Row gutter={24} typeof="flex" justify="space-between">
         <Col xs={24} lg={14}>
           {listingDetailsElement}
           {listingBookingsElement}
+        </Col>
+        <Col xs={24} lg={10}>
+          {listingCreateBookingElement}
         </Col>
       </Row>
     </Layout.Content>
