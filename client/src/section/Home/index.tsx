@@ -1,5 +1,5 @@
 import React from "react";
-import { HomeHero } from "./components";
+import { HomeHero, HomeListings, HomeListingsSkeleton } from "./components";
 import { Layout, Row, Col } from "antd";
 import { RouteComponentProps, Link } from "react-router-dom";
 import { displayErrorMessage } from "../../lib/utils";
@@ -9,8 +9,26 @@ import Paragraph from "antd/lib/typography/Paragraph";
 import mapBackground from "./assets/map-background.jpg";
 import sanFrancisco from "./assets/san-fransisco.jpg";
 import cancun from "./assets/cancun.jpg";
+import { useQuery } from "react-apollo";
+import { LISTINGS } from "../../lib/graphql/queries/Listings";
+import {
+  Listings,
+  ListingsVariables,
+} from "../../lib/graphql/queries/Listings/__generated__/Listings";
+import { ListingsFilter } from "../../lib/graphql/globalTypes";
+
+const PAGE_LIMIT = 4;
+const PAGE_NUMBER = 1;
 
 export const Home = ({ history }: RouteComponentProps) => {
+  const { loading, data } = useQuery<Listings, ListingsVariables>(LISTINGS, {
+    variables: {
+      filter: ListingsFilter.PRICE_HIGH_TO_LOW,
+      limit: PAGE_LIMIT,
+      page: PAGE_NUMBER,
+    },
+  });
+
   const onSearch = (value: string) => {
     const trimmedValue = value.trim();
     if (trimmedValue) {
@@ -19,6 +37,22 @@ export const Home = ({ history }: RouteComponentProps) => {
       displayErrorMessage("Please Enter a valid value!");
     }
   };
+
+  const renderListingsSkeleton = () => {
+    if (loading) {
+      return <HomeListingsSkeleton />;
+    }
+    if (data) {
+      return (
+        <HomeListings
+          title="Premium Listings"
+          listings={data.listings.result}
+        />
+      );
+    }
+    return null;
+  };
+
   return (
     <Layout.Content
       className="home"
@@ -40,6 +74,8 @@ export const Home = ({ history }: RouteComponentProps) => {
           Popular listings in USA
         </Link>
       </div>
+
+      {renderListingsSkeleton()}
 
       <div className="home__listings">
         <Title level={4} className="home-listings__title">
