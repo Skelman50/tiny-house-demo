@@ -43,7 +43,10 @@ export const ListingCreateBooking = ({
 
   const checkOutInputDisabled = !checkInDate;
 
-  const requestButtonDisabled = !checkOutDate || !checkInDate;
+  const requestButtonDisabled =
+    !checkOutDate ||
+    !checkInDate ||
+    moment(checkOutDate).isBefore(checkInDate, "days");
 
   return (
     <div className="listing-booking">
