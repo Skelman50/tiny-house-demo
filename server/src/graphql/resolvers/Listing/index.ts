@@ -8,9 +8,11 @@ import {
   ListingsArgs,
   ListingsData,
   ListingsArgsFilter,
+  ListingsQuery,
 } from "./types";
 import { ObjectId } from "mongodb";
 import { authorize } from "../../../lib/utils";
+import { Google } from "../../../lib/api";
 
 export const listingResolvers: IResolvers = {
   Query: {
@@ -35,15 +37,31 @@ export const listingResolvers: IResolvers = {
     },
     listings: async (
       _root: undefined,
-      { filter, limit, page }: ListingsArgs,
+      { filter, limit, page, location }: ListingsArgs,
       { db }: { db: Database }
     ): Promise<ListingsData> => {
       try {
+        const query: ListingsQuery = {};
         const data: ListingsData = {
+          region: null,
           total: 0,
           result: [],
         };
-        let cursor = await db.listings.find({});
+
+        if (location) {
+          const { city, country, admin } = await Google.geocode(location);
+          if (city) query.city = city;
+          if (admin) query.admin = admin;
+          if (country) {
+            query.country = country;
+          } else {
+            throw new Error("No country find");
+          }
+          const cityText = city ? `${city}, ` : "";
+          const adminText = admin ? `${admin}, ` : "";
+          data.region = `${cityText}${adminText}${country}`;
+        }
+        let cursor = await db.listings.find(query);
         if (filter && filter === ListingsArgsFilter.PRICE_LOW_TO_HIGH) {
           cursor = cursor.sort({ price: 1 });
         }

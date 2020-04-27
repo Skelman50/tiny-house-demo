@@ -1,10 +1,15 @@
 import { google } from "googleapis";
+import { createClient } from "@google/maps";
+
+import { parseAddress } from "../utils";
 
 const auth = new google.auth.OAuth2(
   process.env.G_CLIENT_ID,
   process.env.G_CLIENT_SECRET,
   `${process.env.PUBLIC_URL}/login`
 );
+
+const maps = createClient({ key: `${process.env.G_GEOCODE_KEY}`, Promise });
 
 export const Google = {
   authUrl: auth.generateAuthUrl({
@@ -22,5 +27,12 @@ export const Google = {
       personFields: "emailAddresses,names,photos",
     });
     return { user: data };
+  },
+  geocode: async (address: string) => {
+    const res = await maps.geocode({ address }).asPromise();
+    if (res.status < 200 || res.status > 299) {
+      throw new Error("Failed geocode address");
+    }
+    return parseAddress(res.json.results[0].address_components);
   },
 };
