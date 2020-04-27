@@ -8,6 +8,7 @@ export const LISTINGS = gql`
     $location: String
   ) {
     listings(filter: $filter, page: $page, limit: $limit, location: $location) {
+      total
       region
       result {
         id
