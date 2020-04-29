@@ -17,6 +17,7 @@ interface MatchParams {
 
 interface Props {
   viewer: Viewer;
+  setViewer: (viewer: Viewer) => void;
 }
 
 const PAGE_LIMIT = 4;
@@ -24,19 +25,23 @@ const PAGE_LIMIT = 4;
 export const User = ({
   viewer,
   match,
+  setViewer,
 }: Props & RouteComponentProps<MatchParams>) => {
   const [listingsPage, setListingsPage] = useState(1);
   const [bookingsPage, setBookingsPage] = useState(1);
-  const { data, error, loading } = useQuery<UserData, UserVariables>(USER, {
-    variables: {
-      id: match.params.id,
-      bookingsPage,
-      listingsPage,
-      limit: PAGE_LIMIT,
-    },
-  });
+  const { data, error, loading, refetch } = useQuery<UserData, UserVariables>(
+    USER,
+    {
+      variables: {
+        id: match.params.id,
+        bookingsPage,
+        listingsPage,
+        limit: PAGE_LIMIT,
+      },
+    }
+  );
 
-  console.log(data);
+  const handleUserRefetch = async () => await refetch();
 
   const user = data ? data.user : null;
 
@@ -46,7 +51,13 @@ export const User = ({
   const userBookings = user ? user.bookings : null;
 
   const userProfileElement = user && (
-    <UserProfile user={user} viewerIsUser={viewerIsUser} />
+    <UserProfile
+      user={user}
+      viewerIsUser={viewerIsUser}
+      viewer={viewer}
+      setViewer={setViewer}
+      handleUserRefetch={handleUserRefetch}
+    />
   );
 
   const userListingsElement = userListings && (
@@ -67,6 +78,12 @@ export const User = ({
     />
   );
 
+  const stripeError = new URL(window.location.href).searchParams.get(
+    "stripe_error"
+  );
+
+  const stripeErrorBanner = stripeError && <ErrorBanner />;
+
   if (loading) {
     return (
       <Layout.Content className="user">
@@ -84,6 +101,7 @@ export const User = ({
   }
   return (
     <Layout.Content className="user">
+      {stripeErrorBanner}
       <Row gutter={12} typeof="flex" justify="space-between">
         <Col xs={24}>{userProfileElement}</Col>
         <Col xs={24}>
