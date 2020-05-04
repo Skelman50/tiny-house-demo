@@ -12,17 +12,25 @@ export const Stripe = {
     });
     return response;
   },
-  charge: async (amount: number, source: string, striprAccount: string) => {
+  charge: async (amount: number, source: string, stripeAccount: string) => {
     const res = await client.charges.create(
       {
         amount,
         currency: "usd",
+        source,
         application_fee_amount: Math.round(amount * 0.05),
       },
-      { stripe_account: striprAccount }
+      { stripe_account: stripeAccount }
     );
     if (res.status !== "succeded") {
       throw new Error("Failed charched to Stripe!");
     }
+  },
+  disconnect: async (stripeUserId: string) => {
+    const response = await client.oauth.deauthorize({
+      client_id: `${process.env.S_CLIENT_ID}`,
+      stripe_user_id: stripeUserId,
+    });
+    return response;
   },
 };
