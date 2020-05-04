@@ -9,6 +9,7 @@ import { Layout, Spin } from "antd";
 import { Redirect, RouteComponentProps } from "react-router-dom";
 import { Viewer } from "../../lib/types";
 import { displaySuccessNotification } from "../../lib/utils";
+import { useScrollToTop } from "../../lib/hooks";
 
 interface Props {
   viewer: Viewer;
@@ -31,9 +32,11 @@ export const Stripe = ({
       }
     },
   });
-  console.log(viewer, "viewer");
+
   const connectStripeRef = useRef(connectStripe);
-  console.log(error, "data");
+
+  useScrollToTop();
+
   useEffect(() => {
     const code = new URL(window.location.href).searchParams.get("code");
     if (code) {

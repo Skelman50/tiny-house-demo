@@ -1,6 +1,6 @@
 import { IResolvers } from "apollo-server-express";
 import { Request } from "express";
-import { Listing, Database, User } from "../../../lib/types";
+import { Listing, Database, User, ListingType } from "../../../lib/types";
 import {
   ListingArgs,
   ListingBookingsArgs,
@@ -9,10 +9,32 @@ import {
   ListingsData,
   ListingsArgsFilter,
   ListingsQuery,
+  HostListingArgs,
+  HostListingInput,
 } from "./types";
 import { ObjectId } from "mongodb";
 import { authorize } from "../../../lib/utils";
-import { Google } from "../../../lib/api";
+import { Google, Cloudinary } from "../../../lib/api";
+
+const verifyHostListingInput = ({
+  type,
+  description,
+  title,
+  price,
+}: HostListingInput) => {
+  if (title.length > 100) {
+    throw new Error("Listing title must be under 100 characters!");
+  }
+  if (description.length > 5000) {
+    throw new Error("Listing description must be under 5000 characters!");
+  }
+  if (type !== ListingType.Apartment && type !== ListingType.House) {
+    throw new Error("Listing type must be house or apartment!");
+  }
+  if (price < 0) {
+    throw new Error("Listing price must be greater than 0!");
+  }
+};
 
 export const listingResolvers: IResolvers = {
   Query: {
@@ -76,6 +98,42 @@ export const listingResolvers: IResolvers = {
       } catch (error) {
         throw new Error(`Failed to query listings ${error}`);
       }
+    },
+  },
+
+  Mutation: {
+    hostListing: async (
+      _root: undefined,
+      { input }: HostListingArgs,
+      { db, req }: { db: Database; req: Request }
+    ): Promise<Listing> => {
+      verifyHostListingInput(input);
+      let viewer = await authorize(db, req);
+      if (!viewer) {
+        throw new Error("Viewer not found!");
+      }
+      const { city, country, admin } = await Google.geocode(input.address);
+      if (!city || !country || !admin) {
+        throw new Error("Invalid input address!");
+      }
+      const imageUrl = await Cloudinary.upload(input.image);
+      const insertResult = await db.listings.insertOne({
+        _id: new ObjectId(),
+        ...input,
+        bookings: [],
+        bookingsIndex: {},
+        country,
+        admin,
+        city,
+        host: viewer._id,
+        image: imageUrl,
+      });
+      const insertedListing: Listing = insertResult.ops[0];
+      await db.users.updateOne(
+        { _id: viewer._id },
+        { $push: { listings: insertedListing._id } }
+      );
+      return insertedListing;
     },
   },
 

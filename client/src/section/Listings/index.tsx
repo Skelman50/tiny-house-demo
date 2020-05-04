@@ -17,6 +17,7 @@ import {
   ListingsPagination,
   ListingsSkeleton,
 } from "./components";
+import { useScrollToTop } from "../../lib/hooks";
 
 const PAGE_LIMIT = 8;
 
@@ -40,6 +41,8 @@ export const Listings = ({ match }: RouteComponentProps<MAtchProps>) => {
       },
     }
   );
+
+  useScrollToTop();
 
   useEffect(() => {
     setPage(1);

@@ -10,6 +10,7 @@ import { Layout, Row, Col } from "antd";
 import { UserProfile, UserListings, UserBookings } from "./components";
 import { Viewer } from "../../lib/types";
 import { PageSkeleton, ErrorBanner } from "../../lib/components";
+import { useScrollToTop } from "../../lib/hooks";
 
 interface MatchParams {
   id: string;
@@ -41,7 +42,11 @@ export const User = ({
     }
   );
 
-  const handleUserRefetch = async () => await refetch();
+  useScrollToTop();
+
+  const handleUserRefetch = async () => {
+    await refetch();
+  };
 
   const user = data ? data.user : null;
 

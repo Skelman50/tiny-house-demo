@@ -19,7 +19,7 @@ interface Props {
   viewerIsUser: boolean;
   viewer: Viewer;
   setViewer: (viewer: Viewer) => void;
-  handleUserRefetch: () => void;
+  handleUserRefetch: () => Promise<void>;
 }
 
 const stripeAuthUrl = `https://connect.stripe.com/oauth/authorize?response_type=code&client_id=${process.env.REACT_APP_S_CLIENT_ID}&scope=read_write`;

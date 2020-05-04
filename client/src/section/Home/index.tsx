@@ -16,6 +16,7 @@ import {
   ListingsVariables,
 } from "../../lib/graphql/queries/Listings/__generated__/Listings";
 import { ListingsFilter } from "../../lib/graphql/globalTypes";
+import { useScrollToTop } from "../../lib/hooks";
 
 const PAGE_LIMIT = 4;
 const PAGE_NUMBER = 1;
@@ -28,6 +29,8 @@ export const Home = ({ history }: RouteComponentProps) => {
       page: PAGE_NUMBER,
     },
   });
+
+  useScrollToTop();
 
   const onSearch = (value: string) => {
     const trimmedValue = value.trim();

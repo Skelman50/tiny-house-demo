@@ -12,4 +12,17 @@ export const Stripe = {
     });
     return response;
   },
+  charge: async (amount: number, source: string, striprAccount: string) => {
+    const res = await client.charges.create(
+      {
+        amount,
+        currency: "usd",
+        application_fee_amount: Math.round(amount * 0.05),
+      },
+      { stripe_account: striprAccount }
+    );
+    if (res.status !== "succeded") {
+      throw new Error("Failed charched to Stripe!");
+    }
+  },
 };
